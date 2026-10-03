@@ -154,13 +154,6 @@ func findIncoming(g *graph.Graph, node graph.NodeID, port graph.PortID) (graph.E
 	return graph.Edge{}, false
 }
 
-func sortedNodes(g *graph.Graph) []graph.Node {
-	out := make([]graph.Node, len(g.Nodes))
-	copy(out, g.Nodes)
-	sort.Slice(out, func(i, j int) bool { return out[i].ID < out[j].ID })
-	return out
-}
-
 func findNode(g *graph.Graph, id graph.NodeID) *graph.Node {
 	for i := range g.Nodes {
 		if g.Nodes[i].ID == id {
