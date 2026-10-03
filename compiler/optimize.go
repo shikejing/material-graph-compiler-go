@@ -18,7 +18,19 @@ func optimize(g *graph.Graph, lib *nodelib.Library, version int) (*graph.Graph, 
 	constVals := map[graph.PortRef]graph.Value{}
 	for {
 		foldedAny := false
-		for _, n := range sortedNodes(work) {
+		// 每轮先取排序后的 ID 快照，循环内再取节点的最新状态，
+		// 因为本轮中其他节点折叠可能已改写该节点的覆盖值。
+		ids := make([]graph.NodeID, 0, len(work.Nodes))
+		for _, n := range work.Nodes {
+			ids = append(ids, n.ID)
+		}
+		sort.Slice(ids, func(i, j int) bool { return ids[i] < ids[j] })
+		for _, id := range ids {
+			np := findNode(work, id)
+			if np == nil {
+				continue // 本轮已被折叠移除
+			}
+			n := *np
 			if n.ID == work.OutputNode {
 				continue // 输出节点不可折叠，保持输出契约
 			}
