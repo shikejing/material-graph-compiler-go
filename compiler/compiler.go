@@ -76,24 +76,11 @@ func emitAll(g *graph.Graph, lib *nodelib.Library, version int) ([]graph.NodeID,
 	for _, id := range order {
 		n := findNode(g, id)
 		def, _ := lib.Def(version, n.Type)
-		// 为每个输入端口准备表达式。
-		inputs := make(map[graph.PortID]string, len(def.Inputs))
-		for _, pd := range def.Inputs {
-			expr, err := inputExpr(g, *n, pd, lib, version)
-			if err != nil {
-				return nil, nil, err
-			}
-			inputs[pd.Name] = expr
+		line, err := emitNode(g, *n, def, lib, version)
+		if err != nil {
+			return nil, nil, err
 		}
-		var nodeLines []string
-		for _, out := range def.Outputs {
-			expr, err := def.Emit(out.Name, inputs, n.Overrides)
-			if err != nil {
-				return nil, nil, fmt.Errorf("node %q: emit failed: %w", n.ID, err)
-			}
-			nodeLines = append(nodeLines, fmt.Sprintf("let %s = %s;", varName(n.ID, out.Name), expr))
-		}
-		lines[id] = strings.Join(nodeLines, "\n")
+		lines[id] = line
 	}
 	return order, lines, nil
 }
